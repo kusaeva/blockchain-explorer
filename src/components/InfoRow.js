@@ -28,11 +28,11 @@ const getColor = (title) => {
   return color
 }
 
-const InfoRow = ({ title, content, noSegment, colored, h }) => {
-  const color = colored ? getColor(title) : null
+const InfoRow = ({ title, content, noSegment, colored, color, h }) => {
+  const _color = color || colored ? getColor(title) : null
   const hSize = h || 'h4'
   return (
-    <Segment color={color}>
+    <Segment color={_color}>
        <Grid verticalAlign='middle'>
       <Grid.Column width={4}>
         <Header as={hSize}>{title}</Header>

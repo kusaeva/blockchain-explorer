@@ -7,6 +7,7 @@ import * as api from './api/web3Wrapper.js'
 import * as ethplorer from './api/ethplorer.js'
 import { Button, Grid, Message, Segment, Input } from 'semantic-ui-react'
 import AddressInfo from './components/AddressInfo'
+import ContractInfo from './components/ContractInfo'
 
 class App extends Component {
   constructor (props) {
@@ -151,13 +152,23 @@ class App extends Component {
     } = this.state
     const notFound = !error && searchFinished && !transaction && !block
     if (address) {
-      return (
-        <Grid.Row>
-          <Grid.Column>
-            <AddressInfo address={address} />
-          </Grid.Column>
-        </Grid.Row>
-      )
+      if (address.contractInfo) {
+        return (
+          <Grid.Row>
+            <Grid.Column>
+              <ContractInfo address={address} />
+            </Grid.Column>
+          </Grid.Row>
+        )
+      } else {
+        return (
+          <Grid.Row>
+            <Grid.Column>
+              <AddressInfo address={address} />
+            </Grid.Column>
+          </Grid.Row>
+        )
+      }
     }
     return (
       <React.Fragment>
