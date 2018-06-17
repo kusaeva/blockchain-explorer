@@ -8,37 +8,46 @@ import MinedBlocksPane from '../components/MinedBlocksPane'
 const TabbedContent = ({ address }) => {
   if (!address) return null
   const panes = [
-    {
-      menuItem: 'Token balances',
-      render: () => (
-        <Tab.Pane as='div'>
-          {/* <Segment.Group> */}
-            {/* <Segment color='yellow'>
-              <Header>Token balances</Header>
-            </Segment> */}
+    address.tokens
+      ? {
+        menuItem: 'Token balances',
+        render: () => (
+          <Tab.Pane as='div'>
             {address.tokens.map((token, key) => (
               <TokenBalanceInfo key={key} token={token} />
-            ))}
-          {/* </Segment.Group> */}
-        </Tab.Pane>
-      )
-    },
-    {
-      menuItem: 'Transactions',
-      render: () => <Tab.Pane as='div'><TransactionsPane address={address} /></Tab.Pane>
-    },
-    {
-      menuItem: 'Token transfers',
-      render: () => (
-        <Tab.Pane as='div'><TokenTransfersPane address={address} /></Tab.Pane>
-      )
-    },
-    {
-      menuItem: 'Mined blocks',
-      render: () => <Tab.Pane as='div'><MinedBlocksPane address={address} /></Tab.Pane>
-    }
+              ))}
+          </Tab.Pane>
+          )
+      }
+      : null,
+    address.transactions
+      ? {
+        menuItem: 'Transactions',
+        render: () => (
+          <Tab.Pane as='div'><TransactionsPane address={address} /></Tab.Pane>
+          )
+      }
+      : null,
+    address.tokenTransfers
+      ? {
+        menuItem: 'Token transfers',
+        render: () => (
+          <Tab.Pane as='div'>
+            <TokenTransfersPane address={address} />
+          </Tab.Pane>
+          )
+      }
+      : null,
+    address.minedBlocks
+      ? {
+        menuItem: 'Mined blocks',
+        render: () => (
+          <Tab.Pane as='div'><MinedBlocksPane address={address} /></Tab.Pane>
+          )
+      }
+      : null
   ]
-  return <Tab menu={{ borderless: true}} panes={panes} />
+  return <Tab menu={{ borderless: true }} panes={panes} />
 }
 
 export default TabbedContent

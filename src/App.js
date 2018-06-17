@@ -6,10 +6,17 @@ import InfoRow from './components/InfoRow.js'
 import * as api from './api/web3Wrapper.js'
 import * as ethplorer from './api/ethplorer.js'
 import * as etherscan from './api/etherscan.js'
-import { Button, Grid, Message, Segment, Input } from 'semantic-ui-react'
+import {
+  Button,
+  Grid,
+  Message,
+  Segment,
+  Input,
+  Header
+} from 'semantic-ui-react'
 import AddressInfo from './components/AddressInfo'
 import ContractInfo from './components/ContractInfo'
-import TabbedContent from './containers/TabbedContent';
+import TabbedContent from './containers/TabbedContent'
 
 const MAX_COUNT = 20
 
@@ -17,7 +24,7 @@ class App extends Component {
   constructor (props) {
     super(props)
     this.initialState = {
-      searchValue: '0x9dd134d14d1e65f84b706d6f205cd5b1cd03a46b', // '0x6c806bCD69a28d6D00D3c290676b6763c15463D8',
+      searchValue: '', // '0x6c806bCD69a28d6D00D3c290676b6763c15463D8', //0x9dd134d14d1e65f84b706d6f205cd5b1cd03a46b
       error: null,
       transaction: null,
       receipt: null,
@@ -28,13 +35,17 @@ class App extends Component {
     this.state = {
       ...this.initialState,
       searchFinished: false,
-      currentBlock: -1,
-      blocks: {}
+      currentBlock: 0,
+      blocks: {},
+      ethSupply: 0,
+      ethPrice: {}
     }
   }
 
   componentDidMount () {
     this.timerID = setInterval(this.getCurrentBlock, 3000)
+    etherscan.getEthSupply(this.handleEthSupply, this.onError)
+    etherscan.getEthPrice(this.handleEthPrice, this.onError)
   }
 
   componentWillUnmount () {
@@ -58,6 +69,22 @@ class App extends Component {
     })
   }
 
+  handleEthSupply = result => {
+    if (result.status === '1') {
+      this.setState({
+        ethSupply: result.result
+      })
+    }
+  }
+
+  handleEthPrice = result => {
+    if (result.status === '1') {
+      this.setState({
+        ethPrice: result.result
+      })
+    }
+  }
+
   handleTransactionInfo = (error, info) => {
     this.setState({ searchFinished: true })
     if (error) this.onError(error)
@@ -77,21 +104,19 @@ class App extends Component {
 
   handleAddressInfo = address => {
     this.setState({ address })
-    etherscan.getTokenTransfers(address.address).then(
-      result => {
-       this.handleAddressTransactions(result)
-       etherscan.getTransactions(address.address)
-       .then(result => {
+    etherscan.getTokenTransfers(address.address).then(result => {
+      this.handleAddressTransactions(result)
+      etherscan.getTransactions(address.address).then(result => {
         this.handleTokenTransfers(result)
-        etherscan.getMinedBlocks(address.address)
-        .then (result => this.handleMinedBlocks(result))
-        .catch(this.onError)
-       })
+        etherscan
+          .getMinedBlocks(address.address)
+          .then(result => this.handleMinedBlocks(result))
+          .catch(this.onError)
       })
+    })
   }
 
   handleTokenTransfers = result => {
-    console.log('handleTokenTransfers, result', result)
     if (result.status === '1') {
       this.setState({
         address: {
@@ -103,7 +128,6 @@ class App extends Component {
   }
 
   handleAddressTransactions = result => {
-    console.log('handleAddressTransactions, result', result)
     if (result.status === '1') {
       this.setState({
         address: {
@@ -115,8 +139,6 @@ class App extends Component {
   }
 
   handleMinedBlocks = result => {
-    console.log('handleMinedBlocks, result', result)
-    
     if (result.status === '1') {
       this.setState({
         address: {
@@ -212,13 +234,13 @@ class App extends Component {
             </Grid.Column>
           </Grid.Row>
           <Grid.Row>
-          <Grid.Column width={16}>
-          
-          <TabbedContent address={address} />
-          </Grid.Column>
-          
+            <Grid.Column width={16}>
+
+              <TabbedContent address={address} />
+            </Grid.Column>
+
           </Grid.Row>
-          
+
         </React.Fragment>
       )
     }
@@ -284,10 +306,81 @@ class App extends Component {
       </React.Fragment>
     )
   }
+
+  renderHeader = () => {
+    const { ethPrice, ethSupply, currentBlock } = this.state
+    return (
+      <Grid verticalAlign='center'>
+        <Grid.Row columns={3}>
+          <Grid.Column>
+            <Segment.Group>
+              <Segment color='blue'>
+                <Header>Ether price:</Header>
+              </Segment>
+              <Segment>
+                <Grid verticalAlign='center'>
+                  <Grid.Row verticalAlign='center' columns={2}>
+                    <Grid.Column>
+                      {ethPrice.ethusd &&
+                        <p>{`$${ethPrice.ethusd.toLocaleString()}`}</p>}
+                    </Grid.Column>
+                    <Grid.Column>
+                      {ethPrice.ethbtc &&
+                        <p>{`${ethPrice.ethbtc.toLocaleString()} BTC`}</p>}
+                    </Grid.Column>
+                  </Grid.Row>
+                </Grid>
+              </Segment>
+            </Segment.Group>
+          </Grid.Column>
+          <Grid.Column>
+            <Segment.Group>
+              <Segment color='purple'>
+                <Header>Market cap</Header>
+              </Segment>
+              <Segment>
+                <Grid verticalAlign='center'>
+                  <Grid.Row verticalAlign='center' columns={2}>
+                    <Grid.Column>
+                      <p
+                      >{`$${(api.fromWei(ethSupply + '', 'ether') * ethPrice.ethusd).toLocaleString()}`}</p>
+                    </Grid.Column>
+                  </Grid.Row>
+                </Grid>
+              </Segment>
+            </Segment.Group>
+          </Grid.Column>
+          <Grid.Column>
+            <Segment.Group>
+              <Segment color='violet'>
+                <Header>Last block:</Header>
+              </Segment>
+              <Segment>
+                <Grid verticalAlign='center'>
+                  <Grid.Row verticalAlign='center' columns={2}>
+                    <Grid.Column>
+                      {currentBlock}
+                    </Grid.Column>
+                  </Grid.Row>
+                </Grid>
+              </Segment>
+            </Segment.Group>
+          </Grid.Column>
+        </Grid.Row>
+      </Grid>
+    )
+  }
+
   render () {
     const { error } = this.state
     return (
-      <Grid container style={{ padding: '5em 0em' }}>
+      <Grid container style={{ padding: '1em 0em' }}>
+        <Grid.Row width={16}>
+          <Grid.Column>
+            {this.renderHeader()}
+          </Grid.Column>
+        </Grid.Row>
+
         <Grid.Row>
           <Grid.Column>
             <Input
