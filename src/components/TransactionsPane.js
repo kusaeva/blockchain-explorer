@@ -25,7 +25,7 @@ const TransactionsPane = ({ address }) => {
       </Table.Header>
       <Table.Body>
         {address.transactions.map((tr, key) => (
-          <Table.Row negative={tr.isError !== '0'} key={key}>
+          <Table.Row key={key}>
             <Table.Cell>
             <Grid verticalAlign='middle'>
               <Grid.Column>

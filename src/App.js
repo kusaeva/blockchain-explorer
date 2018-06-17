@@ -77,21 +77,17 @@ class App extends Component {
 
   handleAddressInfo = address => {
     this.setState({ address })
-    etherscan.getTokenTransfers(
-      address.address,
-      this.handleTokenTransfers,
-      this.onError
-    )
-    etherscan.getTransactions(
-      address.address,
-      this.handleAddressTransactions,
-      this.onError
-    )
-    etherscan.getMinedBlocks(
-      address.address,
-      this.handleMinedBlocks,
-      this.onError
-    )
+    etherscan.getTokenTransfers(address.address).then(
+      result => {
+       this.handleAddressTransactions(result)
+       etherscan.getTransactions(address.address)
+       .then(result => {
+        this.handleTokenTransfers(result)
+        etherscan.getMinedBlocks(address.address)
+        .then (result => this.handleMinedBlocks(result))
+        .catch(this.onError)
+       })
+      })
   }
 
   handleTokenTransfers = result => {
@@ -107,6 +103,7 @@ class App extends Component {
   }
 
   handleAddressTransactions = result => {
+    console.log('handleAddressTransactions, result', result)
     if (result.status === '1') {
       this.setState({
         address: {
@@ -118,6 +115,8 @@ class App extends Component {
   }
 
   handleMinedBlocks = result => {
+    console.log('handleMinedBlocks, result', result)
+    
     if (result.status === '1') {
       this.setState({
         address: {
