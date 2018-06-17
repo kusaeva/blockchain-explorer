@@ -2,16 +2,11 @@ import React, { Component } from 'react'
 import moment from 'moment'
 import './App.css'
 import TransactionStatus from './components/TransactionStatus.js'
-import TransactionInfoRow from './components/TransactionInfoRow.js'
+import InfoRow from './components/InfoRow.js'
 import * as api from './api/web3Wrapper.js'
 import * as ethplorer from './api/ethplorer.js'
-import {
-  Button,
-  Grid,
-  Message,
-  Segment,
-  Input
-} from 'semantic-ui-react'
+import { Button, Grid, Message, Segment, Input } from 'semantic-ui-react'
+import AddressInfo from './components/AddressInfo'
 
 class App extends Component {
   constructor (props) {
@@ -21,7 +16,8 @@ class App extends Component {
       error: null,
       transaction: null,
       receipt: null,
-      block: null
+      block: null,
+      address: null
     }
 
     this.state = {
@@ -30,7 +26,6 @@ class App extends Component {
       currentBlock: -1,
       blocks: {}
     }
-
   }
 
   componentDidMount () {
@@ -41,7 +36,7 @@ class App extends Component {
     clearInterval(this.timerID)
   }
 
-  onError = (error) => {
+  onError = error => {
     this.setState({
       error: error.message
     })
@@ -75,8 +70,9 @@ class App extends Component {
     }
   }
 
-  handleAddressInfo = info => {
-    console.log(info)
+  handleAddressInfo = address => {
+    console.log(address)
+    this.setState({ address })
   }
 
   onKeyPress = e => {
@@ -89,7 +85,11 @@ class App extends Component {
     const { searchValue } = this.state
     this.reset()
     if (api.isAddress(searchValue)) {
-      ethplorer.getAddressInfo(searchValue, this.handleAddressInfo, this.onError)
+      ethplorer.getAddressInfo(
+        searchValue,
+        this.handleAddressInfo,
+        this.onError
+      )
     } else {
       var re = /0x[0-9A-Fa-f]{64}/g
       const isHash = re.test(searchValue)
@@ -101,7 +101,6 @@ class App extends Component {
         })
       }
     }
-    
   }
 
   onChange = e => this.setState({ searchValue: e.target.value.trim() })
@@ -114,7 +113,7 @@ class App extends Component {
     const { currentBlock } = this.state
     if (currentBlock === -1) return ''
     return `(${this.state.currentBlock - blockNumber} confirmations)`
-  } 
+  }
 
   receiveBlock = (error, block) => {
     if (error) console.error(error.message)
@@ -141,11 +140,28 @@ class App extends Component {
   }
 
   renderMainInfo = () => {
-    const { error, searchFinished, transaction, receipt, block } = this.state
+    const {
+      error,
+      searchValue,
+      searchFinished,
+      transaction,
+      receipt,
+      block,
+      address
+    } = this.state
     const notFound = !error && searchFinished && !transaction && !block
+    if (address) {
+      return (
+        <Grid.Row>
+          <Grid.Column>
+            <AddressInfo address={address} />
+          </Grid.Column>
+        </Grid.Row>
+      )
+    }
     return (
-    <React.Fragment>
-    <Grid.Row>
+      <React.Fragment>
+        <Grid.Row>
           <Grid.Column>
             {notFound &&
               <Message warning>
@@ -159,21 +175,13 @@ class App extends Component {
           <Grid.Row>
             <Grid.Column>
               <Segment.Group>
-                <Segment>
-                  <TransactionStatus receipt={receipt} />
-                </Segment>
-                <Segment>
-                  <TransactionInfoRow
-                    title='From:'
-                    content={transaction.from}
-                  />
-                </Segment>
-                <Segment>
-                  <TransactionInfoRow title='To:' content={transaction.to} />
-                </Segment>
-                <Segment>
-                  <TransactionInfoRow title='Value:' content={this.fromWei(transaction.value, 'ether')} />
-                </Segment>
+                <TransactionStatus receipt={receipt} />
+                <InfoRow title='From:' content={transaction.from} />
+                <InfoRow title='To:' content={transaction.to} />
+                <InfoRow
+                  title='Value:'
+                  content={this.fromWei(transaction.value, 'ether')}
+                />
               </Segment.Group>
             </Grid.Column>
           </Grid.Row>}
@@ -182,18 +190,14 @@ class App extends Component {
           <Grid.Row>
             <Grid.Column>
               <Segment.Group>
-                <Segment>
-                  <TransactionInfoRow
-                    title='Block height:'
-                    content={`${receipt.blockNumber} ${this.getConfirmations(receipt.blockNumber)}`}
-                  />
-                </Segment>
-                <Segment>
-                  <TransactionInfoRow
-                    title='Timestamp:'
-                    content={this.getBlockTimestamp(receipt.blockNumber)}
-                  />
-                </Segment>
+                <InfoRow
+                  title='Block height:'
+                  content={`${receipt.blockNumber} ${this.getConfirmations(receipt.blockNumber)}`}
+                />
+                <InfoRow
+                  title='Timestamp:'
+                  content={this.getBlockTimestamp(receipt.blockNumber)}
+                />
               </Segment.Group>
             </Grid.Column>
           </Grid.Row>}
@@ -202,28 +206,19 @@ class App extends Component {
           <Grid.Row>
             <Grid.Column>
               <Segment.Group>
-                <Segment>
-                  <TransactionInfoRow
-                    title='Gas limit:'
-                    content={transaction.gas}
-                  />
-                </Segment>
-                <Segment>
-                  <TransactionInfoRow
-                    title='Gas used by Txn:'
-                    content={receipt ? receipt.gasUsed : <em>Pending</em>}
-                  />
-                </Segment>
-                <Segment>
-                  <TransactionInfoRow
-                    title='Gas price:'
-                    content={this.fromWei(transaction.gasPrice, 'gwei')}
-                  />
-                </Segment>
+                <InfoRow title='Gas limit:' content={transaction.gas} />
+                <InfoRow
+                  title='Gas used by Txn:'
+                  content={receipt ? receipt.gasUsed : <em>Pending</em>}
+                />
+                <InfoRow
+                  title='Gas price:'
+                  content={this.fromWei(transaction.gasPrice, 'gwei')}
+                />
               </Segment.Group>
             </Grid.Column>
           </Grid.Row>}
-          </React.Fragment>
+      </React.Fragment>
     )
   }
   render () {
