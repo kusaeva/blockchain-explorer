@@ -5,15 +5,19 @@ import TransactionStatus from './components/TransactionStatus.js'
 import InfoRow from './components/InfoRow.js'
 import * as api from './api/web3Wrapper.js'
 import * as ethplorer from './api/ethplorer.js'
+import * as etherscan from './api/etherscan.js'
 import { Button, Grid, Message, Segment, Input } from 'semantic-ui-react'
 import AddressInfo from './components/AddressInfo'
 import ContractInfo from './components/ContractInfo'
+import TabbedContent from './containers/TabbedContent';
+
+const MAX_COUNT = 20
 
 class App extends Component {
   constructor (props) {
     super(props)
     this.initialState = {
-      searchValue: '',
+      searchValue: '0x9dd134d14d1e65f84b706d6f205cd5b1cd03a46b', // '0x6c806bCD69a28d6D00D3c290676b6763c15463D8',
       error: null,
       transaction: null,
       receipt: null,
@@ -72,8 +76,56 @@ class App extends Component {
   }
 
   handleAddressInfo = address => {
-    console.log(address)
     this.setState({ address })
+    etherscan.getTokenTransfers(
+      address.address,
+      this.handleTokenTransfers,
+      this.onError
+    )
+    etherscan.getTransactions(
+      address.address,
+      this.handleAddressTransactions,
+      this.onError
+    )
+    etherscan.getMinedBlocks(
+      address.address,
+      this.handleMinedBlocks,
+      this.onError
+    )
+  }
+
+  handleTokenTransfers = result => {
+    console.log('handleTokenTransfers, result', result)
+    if (result.status === '1') {
+      this.setState({
+        address: {
+          ...this.state.address,
+          tokenTransfers: result.result.slice(0, MAX_COUNT)
+        }
+      })
+    }
+  }
+
+  handleAddressTransactions = result => {
+    if (result.status === '1') {
+      this.setState({
+        address: {
+          ...this.state.address,
+          transactions: result.result.slice(0, MAX_COUNT)
+        }
+      })
+    }
+  }
+
+  handleMinedBlocks = result => {
+    if (result.status === '1') {
+      this.setState({
+        address: {
+          ...this.state.address,
+          minedBlocks: result.result.slice(0, MAX_COUNT)
+        }
+      })
+    }
   }
 
   onKeyPress = e => {
@@ -143,7 +195,6 @@ class App extends Component {
   renderMainInfo = () => {
     const {
       error,
-      searchValue,
       searchFinished,
       transaction,
       receipt,
@@ -152,23 +203,25 @@ class App extends Component {
     } = this.state
     const notFound = !error && searchFinished && !transaction && !block
     if (address) {
-      if (address.contractInfo) {
-        return (
+      return (
+        <React.Fragment>
           <Grid.Row>
             <Grid.Column>
-              <ContractInfo address={address} />
+              {address.contractInfo
+                ? <ContractInfo address={address} />
+                : <AddressInfo address={address} />}
             </Grid.Column>
           </Grid.Row>
-        )
-      } else {
-        return (
           <Grid.Row>
-            <Grid.Column>
-              <AddressInfo address={address} />
-            </Grid.Column>
+          <Grid.Column width={16}>
+          
+          <TabbedContent address={address} />
+          </Grid.Column>
+          
           </Grid.Row>
-        )
-      }
+          
+        </React.Fragment>
+      )
     }
     return (
       <React.Fragment>
@@ -233,8 +286,7 @@ class App extends Component {
     )
   }
   render () {
-    const { error, searchFinished, transaction, receipt, block } = this.state
-    const notFound = !error && searchFinished && !transaction && !block
+    const { error } = this.state
     return (
       <Grid container style={{ padding: '5em 0em' }}>
         <Grid.Row>

@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "erc20-contract-js": "^1.1.1",
+    "etherscan-api": "^8.1.2",
     "ethplorer-js": "^0.0.7",
     "moment": "^2.22.2",
     "react": "^16.4.1",

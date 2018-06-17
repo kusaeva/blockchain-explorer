@@ -7,4 +7,11 @@ export function getAddressInfo (address, resolve, reject) {
     .then(resolve, reject)
     .catch(reject)
 }
+
+export function getAddressTransactions (address, resolve, reject) {
+  ethplorer.getAddressTransactions(address)
+    .then(resolve, reject)
+    .catch(reject)
+}
+
 export default ethplorer

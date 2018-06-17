@@ -1,5 +1,5 @@
 import React from 'react'
-import { Grid, Card, Segment, Header, Label } from 'semantic-ui-react'
+import { Segment, Label } from 'semantic-ui-react'
 import InfoRow from './InfoRow.js'
 import PriceDiffLabel from './PriceDiffLabel.js'
 
@@ -19,7 +19,7 @@ const TokenBalanceInfo = ({ token }) => {
     : null
   return (
     <Segment.Group>
-      <InfoRow
+      <InfoRow colored
         h='h3'
         title={`${token.tokenInfo.name} (${token.tokenInfo.symbol})`}
         content={headerContent}

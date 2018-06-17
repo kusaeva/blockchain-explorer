@@ -1,5 +1,5 @@
 import React from 'react'
-import { Grid, Card, Segment, Header, Label } from 'semantic-ui-react'
+import { Grid, Segment, Header, Label } from 'semantic-ui-react'
 import InfoRow from './InfoRow.js'
 import PriceDiffLabel from './PriceDiffLabel.js'
 
@@ -13,7 +13,6 @@ const TokenInfo = ({ tokenInfo }) => {
       <PriceDiffLabel diff={price.diff30d} label='30d' />
     </Label.Group>
     : null
-  // {`${token.tokenInfo.name} (${token.tokenInfo.symbol})`}
   const priceContent = price && (
     <Grid>
       <Grid.Column width={3}>{`${(price.rate * 1).toFixed(2)} ${price.currency}`}</Grid.Column>
@@ -36,6 +35,11 @@ const TokenInfo = ({ tokenInfo }) => {
           title='Price'
           content={priceContent}
         />}
+      {price &&
+      <InfoRow
+        title='Market cap'
+        content={`${price.marketCapUsd.toLocaleString()} ${price.currency}`}
+      />}
     </Segment.Group>
   )
 }
